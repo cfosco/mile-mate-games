@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bingo — Milena & Mateo</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --pink: #D4537E;
+    --pink-dark: #993556;
+    --pink-light: #FBEAF0;
+    --pink-mid: #F4C0D1;
+    --text: #1a1a1a;
+    --text-muted: #666;
+    --border: rgba(0,0,0,0.1);
+    --bg: #fff;
+    --bg-soft: #fafafa;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; color: var(--text); background: #f5f0eb; min-height: 100vh; }
+  h1, h2, h3, .serif { font-family: 'Playfair Display', serif; }
+
+  /* ── Layout ── */
+  .app { max-width: 620px; margin: 0 auto; padding: 0 0 3rem; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── Welcome ── */
+  .welcome-hero {
+    background: var(--bg);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    border: 0.5px solid var(--border);
+  }
+  .couple-photo {
+    width: 100%; height: 280px; object-fit: cover; display: block;
+    background: var(--pink-light);
+  }
+  .couple-photo-placeholder {
+    width: 100%; height: 280px;
+    background: linear-gradient(135deg, #FBEAF0 0%, #F4C0D1 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; color: var(--pink-dark);
+  }
+  .couple-photo-placeholder svg { opacity: 0.4; }
+  .couple-photo-placeholder span { font-size: 13px; opacity: 0.6; }
+  .welcome-body { padding: 1.5rem; text-align: center; }
+  .welcome-body h1 { font-size: 32px; font-style: italic; margin-bottom: 4px; color: var(--text); }
+  .welcome-body .date-tag { font-size: 13px; color: var(--pink); font-weight: 500; letter-spacing: 0.05em; margin-bottom: 1.25rem; display: block; }
+  .welcome-body p { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 1.5rem; }
+  .name-input-wrap { display: flex; gap: 8px; max-width: 320px; margin: 0 auto; }
+  .name-input-wrap input {
+    flex: 1; padding: 10px 14px; font-size: 15px; font-family: 'Inter', sans-serif;
+    border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-soft);
+    outline: none; transition: border-color 0.2s;
+  }
+  .name-input-wrap input:focus { border-color: var(--pink); }
+  .loading-msg { font-size: 13px; color: var(--text-muted); margin-top: 1rem; min-height: 20px; }
+
+  /* ── Buttons ── */
+  .btn {
+    cursor: pointer; border: 1px solid var(--border); background: var(--bg);
+    color: var(--text); border-radius: var(--radius); padding: 10px 20px;
+    font-size: 14px; font-weight: 500; font-family: 'Inter', sans-serif;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .btn:hover { background: var(--bg-soft); }
+  .btn-pink { background: var(--pink); border-color: var(--pink); color: #fff; }
+  .btn-pink:hover { background: var(--pink-dark); border-color: var(--pink-dark); }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+
+  /* ── Nav ── */
+  .nav-wrap { background: var(--bg); border-radius: var(--radius-lg) var(--radius-lg) 0 0; border: 0.5px solid var(--border); border-bottom: none; padding: 0 1rem; margin-top: 1rem; }
+  .nav { display: flex; gap: 0; overflow-x: auto; }
+  .nav-btn {
+    background: none; border: none; border-bottom: 2px solid transparent;
+    padding: 14px 16px; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif;
+    color: var(--text-muted); cursor: pointer; white-space: nowrap; transition: color 0.15s;
+  }
+  .nav-btn.active { color: var(--pink); border-bottom-color: var(--pink); }
+  .nav-btn:hover { color: var(--text); }
+
+  /* ── Game container ── */
+  .game-body {
+    background: var(--bg); border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    border: 0.5px solid var(--border); border-top: none; padding: 1.25rem;
+  }
+  .player-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .player-bar-left { display: flex; align-items: center; gap: 10px; }
+  .player-avatar {
+    width: 34px; height: 34px; border-radius: 50%; background: var(--pink-light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 500; color: var(--pink-dark);
+  }
+  .player-name-display { font-size: 14px; font-weight: 500; }
+  .score-pill { font-size: 11px; padding: 3px 9px; background: var(--pink-light); color: var(--pink-dark); border-radius: 20px; font-weight: 500; }
+  .progress-bg { height: 5px; background: #f0e8e8; border-radius: 3px; overflow: hidden; margin-bottom: 1rem; }
+  .progress-fill { height: 5px; background: var(--pink); border-radius: 3px; transition: width 0.4s ease; }
+  .bingo-banner {
+    text-align: center; padding: 10px 16px; background: var(--pink-light);
+    border: 1px solid var(--pink-mid); border-radius: var(--radius);
+    margin-bottom: 1rem; color: var(--pink-dark); font-weight: 500; font-size: 14px;
+    font-family: 'Playfair Display', serif; font-style: italic;
+  }
+
+  /* ── Bingo grid ── */
+  .bingo-header { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 3px; }
+  .bingo-h-cell { text-align: center; font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; color: var(--pink); padding: 4px; }
+  .bingo-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .cell {
+    background: var(--bg-soft); border: 0.5px solid var(--border); border-radius: 8px;
+    padding: 6px 4px; min-height: 74px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center; font-size: 10.5px; line-height: 1.3; color: var(--text);
+    transition: all 0.15s; position: relative; user-select: none;
+  }
+  .cell:hover { border-color: var(--pink-mid); background: var(--pink-light); }
+  .cell.marked { background: var(--pink-light); border-color: var(--pink-mid); }
+  .cell.free { background: var(--pink-light); border-color: var(--pink); cursor: default; font-style: italic; color: var(--pink-dark); font-size: 11px; }
+  .cell-check {
+    position: absolute; top: 4px; right: 4px; width: 15px; height: 15px;
+    background: var(--pink); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cell-check::after {
+    content: ''; width: 7px; height: 4.5px;
+    border-left: 1.5px solid #fff; border-bottom: 1.5px solid #fff;
+    transform: rotate(-45deg) translate(1px, -1px); display: block;
+  }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; padding: 1rem;
+  }
+  .modal {
+    background: var(--bg); border-radius: var(--radius-lg); max-width: 360px;
+    width: 100%; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+  }
+  .modal-img {
+    width: 100%; height: 160px; object-fit: cover; display: block;
+    background: var(--pink-light);
+  }
+  .modal-img-placeholder {
+    width: 100%; height: 160px;
+    background: var(--pink-light);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--pink-mid); font-size: 36px;
+  }
+  .modal-body { padding: 1.25rem; }
+  .modal-body h3 { font-size: 15px; font-weight: 500; margin-bottom: 6px; line-height: 1.4; }
+  .modal-body p { font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem; }
+  .toggle-row {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    background: var(--bg-soft); border-radius: var(--radius); margin-bottom: 1rem;
+    border: 0.5px solid var(--border);
+  }
+  .toggle {
+    width: 42px; height: 24px; background: #ddd; border-radius: 12px;
+    cursor: pointer; position: relative; transition: background 0.2s;
+    flex-shrink: 0; border: none;
+  }
+  .toggle.on { background: var(--pink); }
+  .toggle::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 18px; height: 18px; background: #fff; border-radius: 50%;
+    transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle.on::after { left: 21px; }
+  .toggle-label { font-size: 13px; font-weight: 500; }
+  .already-tag { font-size: 11px; color: var(--pink-dark); margin-bottom: 10px; padding: 4px 10px; background: var(--pink-light); border-radius: 6px; display: inline-block; }
+
+  /* ── Leaderboard ── */
+  .lb-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 0.5px solid var(--border); }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-rank { font-size: 16px; width: 26px; text-align: center; font-family: 'Playfair Display', serif; color: var(--text-muted); }
+  .lb-rank.r1 { color: #BA7517; }
+  .lb-rank.r2 { color: #888; }
+  .lb-rank.r3 { color: #993C1D; }
+  .lb-name { flex: 1; font-size: 14px; font-weight: 500; }
+  .lb-right { text-align: right; }
+  .lb-pct { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* ── Events list ── */
+  .ev-row { padding: 12px 0; border-bottom: 0.5px solid var(--border); }
+  .ev-row:last-child { border-bottom: none; }
+  .ev-title { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+  .ev-meta { display: flex; gap: 10px; }
+  .ev-who { font-size: 12px; color: var(--pink-dark); }
+  .ev-time { font-size: 12px; color: var(--text-muted); }
+
+  /* ── Empty / loading ── */
+  .empty { text-align: center; padding: 2.5rem 1rem; color: var(--text-muted); font-size: 14px; }
+  .sync-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #4caf50; margin-right: 5px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .sync-label { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; }
+
+  /* ── Config notice ── */
+  .config-notice {
+    background: #fff8e1; border: 0.5px solid #f0c040; border-radius: var(--radius);
+    padding: 10px 14px; font-size: 12px; color: #7a5c00; margin-bottom: 1rem; line-height: 1.5;
+  }
+  .config-notice code { background: rgba(0,0,0,0.08); padding: 1px 5px; border-radius: 4px; font-family: monospace; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══ WELCOME SCREEN ══ -->
+<div class="screen active" id="screen-welcome">
+  <div style="padding:1.5rem 1rem 0; text-align:center">
+    <p style="font-family:'Playfair Display',serif;font-size:13px;color:var(--pink);letter-spacing:0.1em;margin-bottom:0.5rem">♥ BINGO DE CASAMIENTO ♥</p>
+  </div>
+  <div class="welcome-hero">
+    <!-- FOTO DE LOS NOVIOS:
+         Reemplazá el bloque .couple-photo-placeholder por:
+         <img src="img/novios.jpg" alt="Milena y Mateo" class="couple-photo"/>
+         y poné la foto en la carpeta img/ de tu repo. -->
+    <div class="couple-photo-placeholder">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="22" cy="20" r="10" stroke="#D4537E" stroke-width="2"/>
+        <circle cx="42" cy="20" r="10" stroke="#D4537E" stroke-width="2"/>
+        <path d="M4 52c0-9.941 8.059-18 18-18h20c9.941 0 18 8.059 18 18" stroke="#D4537E" stroke-width="2" stroke-linecap="round"/>
+        <path d="M29 28 L32 32 L35 28" stroke="#D4537E" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <span>Foto de los novios — ver comentario en el código</span>
+    </div>
+    <div class="welcome-body">
+      <h1>Milena & Mateo</h1>
+      <span class="date-tag"><!-- Fecha del casamiento --></span>
+      <p>¡Bienvenido al bingo del casamiento! Ingresá tu nombre para recibir tu tarjeta única y sumarte al juego.</p>
+      <div class="name-input-wrap">
+        <input type="text" id="name-input" placeholder="Tu nombre..." maxlength="30" onkeydown="if(event.key==='Enter')startGame()"/>
+        <button class="btn btn-pink" onclick="startGame()">Jugar</button>
+      </div>
+      <div class="loading-msg" id="loading-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GAME SCREEN ══ -->
+<div class="screen" id="screen-game">
+  <div class="nav-wrap">
+    <div class="nav">
+      <button class="nav-btn active" onclick="showTab('tab-card',this)">Mi tarjeta</button>
+      <button class="nav-btn" onclick="showTab('tab-leaderboard',this)">Posiciones</button>
+      <button class="nav-btn" onclick="showTab('tab-events',this)">Eventos ocurridos</button>
+    </div>
+  </div>
+  <div class="game-body">
+    <div id="config-notice" class="config-notice" style="display:none">
+      Firebase no configurado — los datos no se sincronizan entre jugadores. Editá las variables <code>FIREBASE_*</code> en el código para activar la sincronización en tiempo real.
+    </div>
+
+    <!-- TARJETA -->
+    <div id="tab-card">
+      <div class="player-bar">
+        <div class="player-bar-left">
+          <div class="player-avatar" id="player-avatar"></div>
+          <span class="player-name-display" id="player-name-display"></span>
+          <span class="score-pill" id="score-pill">0 / 25</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="sync-label" id="sync-label"></span>
+          <button class="btn btn-sm" onclick="confirmNewCard()">Nueva tarjeta</button>
+        </div>
+      </div>
+      <div class="progress-bg"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div id="bingo-banner" class="bingo-banner" style="display:none">¡BINGO! ¡Completaste una línea! ♥</div>
+      <div class="bingo-header">
+        <div class="bingo-h-cell">B</div><div class="bingo-h-cell">I</div>
+        <div class="bingo-h-cell">N</div><div class="bingo-h-cell">G</div><div class="bingo-h-cell">O</div>
+      </div>
+      <div class="bingo-grid" id="bingo-grid"></div>
+    </div>
+
+    <!-- POSICIONES -->
+    <div id="tab-leaderboard" style="display:none">
+      <div id="lb-list"></div>
+    </div>
+
+    <!-- EVENTOS -->
+    <div id="tab-events" style="display:none">
+      <div id="ev-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-box"></div>
+</div>
+
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  CONFIGURACIÓN — editá estos valores antes de publicar
+// ══════════════════════════════════════════════════════════
+
+// 1. URL de tu CSV en GitHub (usá la URL raw de GitHub)
+//    Ejemplo: https://raw.githubusercontent.com/TU_USUARIO/bingo/main/eventos_bingo.csv
+const CSV_URL = "https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/eventos_bingo.csv";
+
+// 2. URL base para las imágenes de eventos
+//    Ejemplo: https://raw.githubusercontent.com/TU_USUARIO/bingo/main/img/
+const IMAGES_BASE_URL = "img/";
+
+// 3. Credenciales de Firebase (obtenelas en console.firebase.google.com)
+//    Dejá en blanco para modo sin sincronización (solo localStorage)
+const FIREBASE_CONFIG = {
+  apiKey: "",
+  authDomain: "",
+  databaseURL: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+
+// ══════════════════════════════════════════════════════════
+
+let events = [];
+let playerName = '';
+let myCard = [];
+let markedCells = {};
+let db = null;
+let playersData = {};
+let happenedEvents = [];
+
+// Firebase init
+(function initFirebase() {
+  if (!FIREBASE_CONFIG.apiKey) return;
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.database();
+    listenToFirebase();
+  } catch(e) { console.warn('Firebase init failed', e); }
+})();
+
+function listenToFirebase() {
+  if (!db) return;
+  db.ref('players').on('value', snap => {
+    playersData = snap.val() || {};
+    if (document.getElementById('tab-leaderboard').style.display !== 'none') renderLeaderboard();
+  });
+  db.ref('happened').on('value', snap => {
+    const raw = snap.val() || {};
+    happenedEvents = Object.values(raw).sort((a,b) => b.ts - a.ts);
+    if (document.getElementById('tab-events').style.display !== 'none') renderEvents();
+    renderCard();
+  });
+}
+
+// Load CSV
+async function loadEvents() {
+  document.getElementById('loading-msg').textContent = 'Cargando eventos...';
+  try {
+    const res = await fetch(CSV_URL + '?t=' + Date.now());
+    if (!res.ok) throw new Error('No se pudo cargar el CSV');
+    const text = await res.text();
+    events = parseCSV(text);
+    document.getElementById('loading-msg').textContent = '';
+  } catch(e) {
+    console.warn('CSV load failed, using defaults:', e);
+    events = DEFAULT_EVENTS;
+    document.getElementById('loading-msg').textContent = '';
+  }
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const result = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = splitCSVLine(lines[i]);
+    if (cols.length >= 2 && cols[0].trim()) {
+      result.push({
+        evento: cols[0].trim().replace(/^"|"$/g,''),
+        descripcion: (cols[1]||'').trim().replace(/^"|"$/g,''),
+        imagen: (cols[2]||'').trim().replace(/^"|"$/g,'')
+      });
+    }
+  }
+  return result.length >= 24 ? result : DEFAULT_EVENTS;
+}
+
+function splitCSVLine(line) {
+  const cols = []; let cur = ''; let inQ = false;
+  for (let c of line) {
+    if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { cols.push(cur); cur = ''; }
+    else { cur += c; }
+  }
+  cols.push(cur);
+  return cols;
+}
+
+// Card generation (seeded per player name)
+function seededRng(seed) {
+  let s = seed;
+  return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+}
+function nameToSeed(name) {
+  let h = 0;
+  for (let c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffffffff;
+  return Math.abs(h) || 1;
+}
+function generateCard(name) {
+  const rng = seededRng(nameToSeed(name));
+  const pool = [...events].sort(() => rng() - 0.5).slice(0, 24);
+  const card = [];
+  for (let i = 0; i < 25; i++) {
+    if (i === 12) card.push({evento:'LIBRE', descripcion:'Casilla libre. ¡Ya la tenés!', imagen:'', free:true});
+    else card.push(pool[i < 12 ? i : i - 1]);
+  }
+  return card;
+}
+
+// Start game
+async function startGame() {
+  const input = document.getElementById('name-input').value.trim();
+  if (!input) { document.getElementById('name-input').focus(); return; }
+  playerName = input;
+  document.getElementById('loading-msg').textContent = 'Cargando...';
+  if (events.length < 24) await loadEvents();
+  document.getElementById('loading-msg').textContent = '';
+
+  const saved = localStorage.getItem('bingo_card_' + playerName);
+  if (saved) {
+    try { myCard = JSON.parse(saved); } catch(e) { myCard = generateCard(playerName); }
+  } else {
+    myCard = generateCard(playerName);
+    localStorage.setItem('bingo_card_' + playerName, JSON.stringify(myCard));
+  }
+  const savedMarked = localStorage.getItem('bingo_marked_' + playerName);
+  markedCells = savedMarked ? JSON.parse(savedMarked) : {12: true};
+
+  document.getElementById('screen-welcome').classList.remove('active');
+  document.getElementById('screen-game').classList.add('active');
+  if (!FIREBASE_CONFIG.apiKey) {
+    document.getElementById('config-notice').style.display = 'block';
+  }
+
+  const initials = playerName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('player-avatar').textContent = initials;
+  document.getElementById('player-name-display').textContent = playerName;
+
+  if (db) {
+    document.getElementById('sync-label').innerHTML = '<span class="sync-dot"></span>En vivo';
+    saveToFirebase();
+  }
+  renderCard();
+}
+
+function confirmNewCard() {
+  if (!confirm('¿Generás una nueva tarjeta? Perdés tu progreso actual.')) return;
+  myCard = generateCard(playerName + Date.now());
+  markedCells = {12: true};
+  localStorage.setItem('bingo_card_' + playerName, JSON.stringify(myCard));
+  saveLocal();
+  renderCard();
+}
+
+function saveLocal() {
+  localStorage.setItem('bingo_marked_' + playerName, JSON.stringify(markedCells));
+}
+
+function saveToFirebase() {
+  if (!db || !playerName) return;
+  const score = Object.keys(markedCells).length;
+  db.ref('players/' + encodeURIComponent(playerName)).set({ name: playerName, score, ts: Date.now() });
+}
+
+// Render card
+function renderCard() {
+  const grid = document.getElementById('bingo-grid');
+  grid.innerHTML = '';
+  myCard.forEach((cell, i) => {
+    const div = document.createElement('div');
+    const isMarked = !!markedCells[i];
+    div.className = 'cell' + (cell.free ? ' free' : '') + (isMarked ? ' marked' : '');
+    div.textContent = cell.free ? '♥ libre ♥' : cell.evento;
+    if (isMarked && !cell.free) {
+      const chk = document.createElement('div');
+      chk.className = 'cell-check';
+      div.appendChild(chk);
+    }
+    if (!cell.free) div.onclick = () => openModal(i);
+    grid.appendChild(div);
+  });
+  const total = Object.keys(markedCells).length;
+  document.getElementById('score-pill').textContent = total + ' / 25';
+  document.getElementById('progress-fill').style.width = Math.round(total/25*100) + '%';
+  checkBingo();
+}
+
+function checkBingo() {
+  const m = markedCells;
+  const lines = [
+    [0,1,2,3,4],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24],
+    [0,5,10,15,20],[1,6,11,16,21],[2,7,12,17,22],[3,8,13,18,23],[4,9,14,19,24],
+    [0,6,12,18,24],[4,8,12,16,20]
+  ];
+  const has = lines.some(l => l.every(i => m[i]));
+  document.getElementById('bingo-banner').style.display = has ? 'block' : 'none';
+}
+
+// Modal
+function openModal(idx) {
+  const cell = myCard[idx];
+  const isMarked = !!markedCells[idx];
+  const globalEntry = happenedEvents.find(e => e.evento === cell.evento);
+  const imgSrc = cell.imagen ? IMAGES_BASE_URL + cell.imagen : '';
+
+  const imgHtml = imgSrc
+    ? `<img src="${imgSrc}" class="modal-img" alt="${cell.evento}" onerror="this.parentNode.innerHTML='<div class=modal-img-placeholder>♥</div>'">`
+    : `<div class="modal-img-placeholder">♥</div>`;
+
+  const alreadyHtml = (globalEntry && globalEntry.player !== playerName)
+    ? `<div class="already-tag">Marcado por ${globalEntry.player} a las ${globalEntry.time}</div>`
+    : '';
+
+  document.getElementById('modal-box').innerHTML = `
+    ${imgHtml}
+    <div class="modal-body">
+      <h3>${cell.evento}</h3>
+      <p>${cell.descripcion}</p>
+      ${alreadyHtml}
+      <div class="toggle-row">
+        <button class="toggle ${isMarked?'on':''}" id="modal-toggle" onclick="toggleCell(${idx})"></button>
+        <span class="toggle-label">${isMarked ? '¡Ocurrió!' : 'Marcar como ocurrido'}</span>
+      </div>
+      <button class="btn" style="width:100%" onclick="closeModal()">Cerrar</button>
+    </div>`;
+  document.getElementById('modal-overlay').style.display = 'flex';
+}
+
+function toggleCell(idx) {
+  const cell = myCard[idx];
+  if (markedCells[idx]) {
+    delete markedCells[idx];
+  } else {
+    markedCells[idx] = true;
+    const existing = happenedEvents.find(e => e.evento === cell.evento);
+    if (!existing) {
+      const now = new Date();
+      const time = now.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
+      const entry = {evento: cell.evento, player: playerName, time, ts: now.getTime()};
+      happenedEvents.unshift(entry);
+      if (db) db.ref('happened/' + now.getTime()).set(entry);
+    }
+  }
+  saveLocal();
+  saveToFirebase();
+  closeModal();
+  renderCard();
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').style.display = 'none';
+}
+
+// Tabs
+function showTab(id, btn) {
+  ['tab-card','tab-leaderboard','tab-events'].forEach(t => document.getElementById(t).style.display = 'none');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).style.display = 'block';
+  btn.classList.add('active');
+  if (id === 'tab-leaderboard') renderLeaderboard();
+  if (id === 'tab-events') renderEvents();
+}
+
+function renderLeaderboard() {
+  const localScore = Object.keys(markedCells).length;
+  let all = db
+    ? Object.values(playersData).sort((a,b) => b.score - a.score)
+    : [{name: playerName, score: localScore}];
+  const el = document.getElementById('lb-list');
+  if (!all.length) { el.innerHTML = '<div class="empty">Aún no hay jugadores.</div>'; return; }
+  const medals = ['♦','♥','♣'];
+  el.innerHTML = all.map((p,i) => {
+    const pct = Math.round(p.score/25*100);
+    return `<div class="lb-row">
+      <span class="lb-rank ${i<3?'r'+(i+1):''}">${i<3?medals[i]:i+1}</span>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+          <span class="lb-name">${p.name}${p.name===playerName?' (vos)':''}</span>
+          <span class="score-pill">${p.score} / 25</span>
+        </div>
+        <div class="progress-bg"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderEvents() {
+  const el = document.getElementById('ev-list');
+  if (!happenedEvents.length) { el.innerHTML = '<div class="empty">Ningún evento marcado todavía.</div>'; return; }
+  el.innerHTML = happenedEvents.map(e =>
+    `<div class="ev-row">
+      <div class="ev-title">${e.evento}</div>
+      <div class="ev-meta"><span class="ev-who">${e.player}</span><span class="ev-time">${e.time}</span></div>
+    </div>`
+  ).join('');
+}
+
+// Init
+loadEvents();
+
+// Default events fallback
+const DEFAULT_EVENTS = [
+  {evento:"Un invitado se pone la corbata de vincha",descripcion:"Cuando la corbata deja de ser accesorio formal y se convierte en diadema improvisada.",imagen:"corbata_vincha.jpg"},
+  {evento:"Mateo termina con la camisa afuera del pantalón",descripcion:"El momento exacto en que Mateo entra en modo fiesta total.",imagen:"camisa_afuera.jpg"},
+  {evento:"Milena se cambia los zapatos por zapatillas o chatitas",descripcion:"Los tacos duran hasta la primera canción de pista.",imagen:"zapatos_cambio.jpg"},
+  {evento:"Alguien intenta robar un centro de mesa antes de tiempo",descripcion:"Los centros de mesa tienen más seguridad que el novio.",imagen:"centro_mesa.jpg"},
+  {evento:"Un niño se queda dormido sobre dos sillas",descripcion:"El sueño no distingue de horarios ni de celebraciones.",imagen:"nino_dormido.jpg"},
+  {evento:"Se corta el trencito a mitad de la pista de baile",descripcion:"El trencito pierde fuerza y se descarrila en plena pista.",imagen:"trencito.jpg"},
+  {evento:"Alguien tira vino tinto sobre un mantel blanco",descripcion:"Una mancha que va a quedar en la memoria (y en el mantel).",imagen:"vino_mantel.jpg"},
+  {evento:"La tía le pregunta a un soltero ¿Y vos para cuándo?",descripcion:"La pregunta más temida de toda reunión familiar argentina.",imagen:"tia_pregunta.jpg"},
+  {evento:"Invitado intentando convencer al DJ de poner un tema",descripcion:"Negociaciones diplomáticas con el controlador de la música.",imagen:"dj_negocio.jpg"},
+  {evento:"Alguien se guarda comida en una servilleta para después",descripcion:"La técnica del tupper portátil de emergencia.",imagen:"comida_servilleta.jpg"},
+  {evento:"Duelo de baile entre dos personas que no se conocían",descripcion:"La pista de baile como gran igualador social.",imagen:"duelo_baile.jpg"},
+  {evento:"Mateo es revoleado por el aire por sus amigos",descripcion:"El vuelo nupcial masculino de rigor.",imagen:"mateo_aire.jpg"},
+  {evento:"Alguien llora desconsoladamente durante el brindis",descripcion:"Las lágrimas de alegría (o nostalgia) se desbordan en el brindis.",imagen:"llanto_brindis.jpg"},
+  {evento:"Se arma un pogo con una canción de rock nacional",descripcion:"Cuando el rock argentino toma el control de la fiesta.",imagen:"pogo_rock.jpg"},
+  {evento:"Invitado grabando toda la fiesta con el flash prendido",descripcion:"El fotoperiodista no oficial con batería eterna y flash molesto.",imagen:"flash_prendido.jpg"},
+  {evento:"Nadie agarra el ramo y cae al piso",descripcion:"El ramo hace su recorrido solo hasta el piso.",imagen:"ramo_piso.jpg"},
+  {evento:"Alguien confunde a un invitado con un mozo",descripcion:"El look formal puede traer consecuencias inesperadas.",imagen:"confunde_mozo.jpg"},
+  {evento:"Se termina el hielo en la barra",descripcion:"La tragedia silenciosa que marca el declive de los tragos.",imagen:"sin_hielo.jpg"},
+  {evento:"Aparece un par de tacos abandonados bajo una mesa",descripcion:"Los zapatos encuentran su libertad debajo de una mesa.",imagen:"tacos_mesa.jpg"},
+  {evento:"Alguien hace air guitar con un palo de cotillón",descripcion:"El cotillón se convierte en instrumento musical imaginario.",imagen:"air_guitar.jpg"},
+  {evento:"Selfie grupal donde alguien queda afuera de la foto",descripcion:"La selfie que no fue para todos.",imagen:"selfie_grupal.jpg"},
+  {evento:"La abuela le da un consejo matrimonial a Mateo en público",descripcion:"Sabiduría conyugal transmitida con micrófono abierto.",imagen:"abuela_consejo.jpg"},
+  {evento:"Dos invitadas aparecen vestidas con el mismo color",descripcion:"La coincidencia cromática que nadie planeó.",imagen:"mismo_color.jpg"},
+  {evento:"Alguien intenta hacer un truco de magia con los cubiertos",descripcion:"Ilusionismo espontáneo con los elementos de la mesa.",imagen:"magia_cubiertos.jpg"},
+  {evento:"Invitado que se sirve tres postres distintos al mismo tiempo",descripcion:"La estrategia del postre múltiple: probar todo a la vez.",imagen:"tres_postres.jpg"},
+  {evento:"Alex intenta un paso de baile acrobático y falla",descripcion:"El intento épico que termina en caída con estilo.",imagen:"alex_acrobatico.jpg"},
+  {evento:"Sole se queda sin batería en el celular de tanto sacar fotos",descripcion:"El sacrificio de la fotógrafa no oficial de la noche.",imagen:"sole_bateria.jpg"},
+  {evento:"Mamá se abraza llorando con una amiga de la infancia",descripcion:"El reencuentro emotivo que derrite hasta al más duro.",imagen:"mama_abrazo.jpg"},
+  {evento:"Alguien pide un aplauso para el asador o el catering",descripcion:"El reconocimiento popular al equipo gastronómico.",imagen:"aplauso_asador.jpg"},
+  {evento:"Un invitado se olvida el nombre de alguno de los novios",descripcion:"El momento incómodo de máximo olvido nupcial.",imagen:"olvida_nombre.jpg"}
+];
+</script>
+</body>
+</html>
