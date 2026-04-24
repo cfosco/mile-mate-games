@@ -149,9 +149,10 @@
   .modal-img-placeholder {
     width: 100%; height: 160px;
     background: var(--pink-light);
-    display: flex; align-items: center; justify-content: center;
-    color: var(--pink-mid); font-size: 36px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
   }
+  .modal-img-placeholder span:first-child { font-size: 34px; letter-spacing: 4px; }
+  .placeholder-label { font-size: 11px; color: var(--pink-dark); opacity: 0.6; font-style: italic; }
   .modal-body { padding: 1.25rem; }
   .modal-body h3 { font-size: 15px; font-weight: 500; margin-bottom: 6px; line-height: 1.4; }
   .modal-body p { font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem; }
@@ -200,6 +201,24 @@
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
   .sync-label { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; }
 
+  /* ── Avatar / selfie ── */
+  .selfie-wrap { margin-top: 1.25rem; border-top: 0.5px solid var(--border); padding-top: 1.25rem; }
+  .selfie-label { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
+  .selfie-preview {
+    width: 90px; height: 90px; border-radius: 50%; object-fit: cover; display: block;
+    margin: 0 auto 10px; border: 2px solid var(--pink-mid);
+  }
+  .selfie-placeholder {
+    width: 90px; height: 90px; border-radius: 50%; margin: 0 auto 10px;
+    background: var(--pink-light); border: 2px dashed var(--pink-mid);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; cursor: pointer;
+  }
+  .selfie-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  #camera-stream { width: 200px; height: 200px; border-radius: 50%; object-fit: cover; display: none; margin: 0 auto 10px; border: 2px solid var(--pink); }
+  .lb-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 1.5px solid var(--pink-mid); }
+  .lb-avatar-placeholder { width: 38px; height: 38px; border-radius: 50%; background: var(--pink-light); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; color: var(--pink-dark); flex-shrink: 0; border: 1.5px solid var(--pink-mid); }
+
   /* ── Config notice ── */
   .config-notice {
     background: #fff8e1; border: 0.5px solid #f0c040; border-radius: var(--radius);
@@ -239,6 +258,22 @@
         <button class="btn btn-pink" onclick="startGame()">Jugar</button>
       </div>
       <div class="loading-msg" id="loading-msg"></div>
+
+      <div class="selfie-wrap">
+        <p class="selfie-label">Foto de perfil <span style="color:var(--pink)">opcional</span> — aparece en el leaderboard</p>
+        <div id="selfie-placeholder" class="selfie-placeholder" onclick="startCamera()" title="Sacarme una selfie">
+          📷
+        </div>
+        <img id="selfie-preview" class="selfie-preview" style="display:none" alt="Tu foto"/>
+        <video id="camera-stream" autoplay playsinline></video>
+        <canvas id="selfie-canvas" style="display:none"></canvas>
+        <div class="selfie-btns" id="selfie-btns">
+          <button class="btn btn-sm" id="btn-open-cam" onclick="startCamera()">Abrir cámara</button>
+          <button class="btn btn-sm btn-pink" id="btn-snap" onclick="snapPhoto()" style="display:none">Sacar foto</button>
+          <button class="btn btn-sm" id="btn-retake" onclick="retakePhoto()" style="display:none">Repetir</button>
+          <button class="btn btn-sm" id="btn-skip-cam" onclick="cancelCamera()" style="display:none">Cancelar</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -265,10 +300,7 @@
           <span class="player-name-display" id="player-name-display"></span>
           <span class="score-pill" id="score-pill">0 / 25</span>
         </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="sync-label" id="sync-label"></span>
-          <button class="btn btn-sm" onclick="confirmNewCard()">Nueva tarjeta</button>
-        </div>
+        <span class="sync-label" id="sync-label"></span>
       </div>
       <div class="progress-bg"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
       <div id="bingo-banner" class="bingo-banner" style="display:none">¡BINGO! ¡Completaste una línea! ♥</div>
@@ -336,6 +368,7 @@ let markedCells = {};
 let db = null;
 let playersData = {};
 let happenedEvents = [];
+let selfiesData = {};
 
 // Firebase init
 (function initFirebase() {
@@ -352,6 +385,9 @@ function listenToFirebase() {
   db.ref('players').on('value', snap => {
     playersData = snap.val() || {};
     if (document.getElementById('tab-leaderboard').style.display !== 'none') renderLeaderboard();
+  });
+  db.ref('selfies').on('value', snap => {
+    selfiesData = snap.val() || {};
   });
   db.ref('happened').on('value', snap => {
     const raw = snap.val() || {};
@@ -416,23 +452,127 @@ function nameToSeed(name) {
 }
 function generateCard(name) {
   const rng = seededRng(nameToSeed(name));
-  const pool = [...events].sort(() => rng() - 0.5).slice(0, 24);
+  const pool = [...events];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  const picked = pool.slice(0, 24);
   const card = [];
   for (let i = 0; i < 25; i++) {
-    if (i === 12) card.push({evento:'LIBRE', descripcion:'Casilla libre. ¡Ya la tenés!', imagen:'', free:true});
-    else card.push(pool[i < 12 ? i : i - 1]);
+    if (i === 12) card.push({evento:'LIBRE', descripcion:'¡Casilla libre!', imagen:'', free:true});
+    else card.push(picked[i < 12 ? i : i - 1]);
   }
   return card;
 }
+
+// ── Selfie / camera ──
+let selfieDataUrl = '';
+let cameraStream = null;
+
+function startCamera() {
+  const video = document.getElementById('camera-stream');
+  const placeholder = document.getElementById('selfie-placeholder');
+  const preview = document.getElementById('selfie-preview');
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}, audio:false})
+    .then(stream => {
+      cameraStream = stream;
+      video.srcObject = stream;
+      video.style.display = 'block';
+      placeholder.style.display = 'none';
+      preview.style.display = 'none';
+      document.getElementById('btn-open-cam').style.display = 'none';
+      document.getElementById('btn-snap').style.display = 'inline-block';
+      document.getElementById('btn-skip-cam').style.display = 'inline-block';
+      document.getElementById('btn-retake').style.display = 'none';
+    })
+    .catch(() => alert('No se pudo acceder a la cámara. Permití el acceso en tu navegador.'));
+}
+
+function snapPhoto() {
+  const video = document.getElementById('camera-stream');
+  const canvas = document.getElementById('selfie-canvas');
+  canvas.width = 200; canvas.height = 200;
+  const ctx = canvas.getContext('2d');
+  const size = Math.min(video.videoWidth, video.videoHeight);
+  const ox = (video.videoWidth - size) / 2;
+  const oy = (video.videoHeight - size) / 2;
+  ctx.save();
+  ctx.scale(-1, 1); ctx.drawImage(video, ox, oy, size, size, -200, 0, 200, 200);
+  ctx.restore();
+  selfieDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+  stopCamera();
+  const preview = document.getElementById('selfie-preview');
+  preview.src = selfieDataUrl;
+  preview.style.display = 'block';
+  document.getElementById('selfie-placeholder').style.display = 'none';
+  document.getElementById('btn-open-cam').style.display = 'none';
+  document.getElementById('btn-snap').style.display = 'none';
+  document.getElementById('btn-skip-cam').style.display = 'none';
+  document.getElementById('btn-retake').style.display = 'inline-block';
+}
+
+function retakePhoto() {
+  selfieDataUrl = '';
+  document.getElementById('selfie-preview').style.display = 'none';
+  document.getElementById('selfie-placeholder').style.display = 'flex';
+  document.getElementById('btn-retake').style.display = 'none';
+  document.getElementById('btn-open-cam').style.display = 'inline-block';
+}
+
+function cancelCamera() {
+  stopCamera();
+  document.getElementById('selfie-placeholder').style.display = 'flex';
+  document.getElementById('btn-open-cam').style.display = 'inline-block';
+  document.getElementById('btn-snap').style.display = 'none';
+  document.getElementById('btn-skip-cam').style.display = 'none';
+}
+
+function stopCamera() {
+  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+  const video = document.getElementById('camera-stream');
+  video.srcObject = null; video.style.display = 'none';
+}
+
+// ── Session persistence on page load ──
+(function restoreSession() {
+  const saved = localStorage.getItem('bingo_active_player');
+  if (!saved) return;
+  // Defer until after events load
+  window._restorePlayer = saved;
+})();
 
 // Start game
 async function startGame() {
   const input = document.getElementById('name-input').value.trim();
   if (!input) { document.getElementById('name-input').focus(); return; }
-  playerName = input;
+
   document.getElementById('loading-msg').textContent = 'Cargando...';
   if (events.length < 24) await loadEvents();
+
+  // ── Check if name is taken by a DIFFERENT device (Firebase only) ──
+  const isReturning = localStorage.getItem('bingo_card_' + input) !== null;
+  if (db && !isReturning) {
+    const snap = await db.ref('players/' + encodeURIComponent(input)).get();
+    if (snap.exists()) {
+      document.getElementById('loading-msg').textContent = '';
+      document.getElementById('loading-msg').style.color = '#993556';
+      document.getElementById('loading-msg').textContent =
+        '⚠ Ese nombre ya está en uso. Probá con otro o agregá un apellido.';
+      return;
+    }
+  }
+  document.getElementById('loading-msg').style.color = '';
   document.getElementById('loading-msg').textContent = '';
+
+  await activatePlayer(input);
+}
+
+async function activatePlayer(name) {
+  playerName = name;
+  localStorage.setItem('bingo_active_player', playerName);
+
+  if (events.length < 24) await loadEvents();
 
   const saved = localStorage.getItem('bingo_card_' + playerName);
   if (saved) {
@@ -450,23 +590,38 @@ async function startGame() {
     document.getElementById('config-notice').style.display = 'block';
   }
 
+  // Selfie
+  if (selfieDataUrl) {
+    localStorage.setItem('bingo_selfie_' + playerName, selfieDataUrl);
+  }
+  const savedSelfie = localStorage.getItem('bingo_selfie_' + playerName);
+  if (savedSelfie) {
+    selfieDataUrl = savedSelfie;
+    const prev = document.getElementById('selfie-preview');
+    if (prev) { prev.src = savedSelfie; prev.style.display = 'block'; }
+    const ph = document.getElementById('selfie-placeholder');
+    if (ph) ph.style.display = 'none';
+  }
+  if (db && selfieDataUrl) {
+    db.ref('selfies/' + encodeURIComponent(playerName)).set(selfieDataUrl);
+  }
+
   const initials = playerName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  document.getElementById('player-avatar').textContent = initials;
+  const avatarEl = document.getElementById('player-avatar');
+  if (savedSelfie) {
+    avatarEl.style.backgroundImage = 'url(' + savedSelfie + ')';
+    avatarEl.style.backgroundSize = 'cover';
+    avatarEl.style.backgroundPosition = 'center';
+    avatarEl.textContent = '';
+  } else {
+    avatarEl.textContent = initials;
+  }
   document.getElementById('player-name-display').textContent = playerName;
 
   if (db) {
     document.getElementById('sync-label').innerHTML = '<span class="sync-dot"></span>En vivo';
     saveToFirebase();
   }
-  renderCard();
-}
-
-function confirmNewCard() {
-  if (!confirm('¿Generás una nueva tarjeta? Perdés tu progreso actual.')) return;
-  myCard = generateCard(playerName + Date.now());
-  markedCells = {12: true};
-  localStorage.setItem('bingo_card_' + playerName, JSON.stringify(myCard));
-  saveLocal();
   renderCard();
 }
 
@@ -477,7 +632,16 @@ function saveLocal() {
 function saveToFirebase() {
   if (!db || !playerName) return;
   const score = Object.keys(markedCells).length;
-  db.ref('players/' + encodeURIComponent(playerName)).set({ name: playerName, score, ts: Date.now() });
+  const key = encodeURIComponent(playerName);
+  db.ref('players/' + key).once('value').then(snap => {
+    const existing = snap.val() || {};
+    db.ref('players/' + key).set({
+      name: playerName,
+      score,
+      ts: Date.now(),
+      claimedAt: existing.claimedAt || Date.now()
+    });
+  });
 }
 
 // Render card
@@ -514,16 +678,43 @@ function checkBingo() {
   document.getElementById('bingo-banner').style.display = has ? 'block' : 'none';
 }
 
+// Themed emoji placeholders — matched by keywords in the event text
+function getPlaceholderEmoji(texto) {
+  const t = texto.toLowerCase();
+  if (t.includes('bail') || t.includes('pista') || t.includes('pogo') || t.includes('trencito')) return '💃🕺🎶';
+  if (t.includes('vino') || t.includes('barra') || t.includes('hielo') || t.includes('brindis')) return '🍷🥂🫗';
+  if (t.includes('foto') || t.includes('selfie') || t.includes('flash') || t.includes('celular')) return '📸🤳✨';
+  if (t.includes('llor') || t.includes('abrazo') || t.includes('mamá') || t.includes('amiga')) return '😭🤗💕';
+  if (t.includes('ramo') || t.includes('zapato') || t.includes('taco') || t.includes('corbata')) return '👠💍🌸';
+  if (t.includes('niño') || t.includes('dorm')) return '😴💤🛏️';
+  if (t.includes('comida') || t.includes('postre') || t.includes('asador') || t.includes('catering')) return '🍽️🥩🍰';
+  if (t.includes('dj') || t.includes('música') || t.includes('guitar') || t.includes('cotillón')) return '🎸🎵🎤';
+  if (t.includes('mozo') || t.includes('confunde')) return '🤵😬🫣';
+  if (t.includes('magia') || t.includes('truco')) return '🪄✨🎩';
+  if (t.includes('tía') || t.includes('abuela') || t.includes('consejo')) return '👵💬🫦';
+  if (t.includes('mateo') || t.includes('milena') || t.includes('alex') || t.includes('sole')) return '🤵👰🎊';
+  if (t.includes('color') || t.includes('vestid')) return '👗👗😳';
+  if (t.includes('nombre') || t.includes('olvida')) return '🤔💭❓';
+  if (t.includes('centro') || t.includes('mesa') || t.includes('mantel')) return '🌼🕯️🙈';
+  return '🎉💫🥳';
+}
+
+function buildImgHtml(cell) {
+  const imgSrc = cell.imagen ? IMAGES_BASE_URL + cell.imagen : '';
+  const emoji = getPlaceholderEmoji(cell.evento || '');
+  const placeholder = `<div class="modal-img-placeholder"><span>${emoji}</span><span class="placeholder-label">foto próximamente</span></div>`;
+  if (!imgSrc) return placeholder;
+  return `<img src="${imgSrc}" class="modal-img" alt="${cell.evento}"
+    onerror="this.outerHTML='${placeholder.replace(/'/g,'&#39;').replace(/"/g,'&quot;')}'">`;
+}
+
 // Modal
 function openModal(idx) {
   const cell = myCard[idx];
   const isMarked = !!markedCells[idx];
   const globalEntry = happenedEvents.find(e => e.evento === cell.evento);
-  const imgSrc = cell.imagen ? IMAGES_BASE_URL + cell.imagen : '';
 
-  const imgHtml = imgSrc
-    ? `<img src="${imgSrc}" class="modal-img" alt="${cell.evento}" onerror="this.parentNode.innerHTML='<div class=modal-img-placeholder>♥</div>'">`
-    : `<div class="modal-img-placeholder">♥</div>`;
+  const imgHtml = buildImgHtml(cell);
 
   const alreadyHtml = (globalEntry && globalEntry.player !== playerName)
     ? `<div class="already-tag">Marcado por ${globalEntry.player} a las ${globalEntry.time}</div>`
@@ -589,8 +780,13 @@ function renderLeaderboard() {
   const medals = ['♦','♥','♣'];
   el.innerHTML = all.map((p,i) => {
     const pct = Math.round(p.score/25*100);
+    const selfie = selfiesData[encodeURIComponent(p.name)] || localStorage.getItem('bingo_selfie_' + p.name);
+    const avatarHtml = selfie
+      ? `<img class="lb-avatar" src="${selfie}" alt="${p.name}">`
+      : `<div class="lb-avatar-placeholder">${p.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>`;
     return `<div class="lb-row">
       <span class="lb-rank ${i<3?'r'+(i+1):''}">${i<3?medals[i]:i+1}</span>
+      ${avatarHtml}
       <div style="flex:1">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
           <span class="lb-name">${p.name}${p.name===playerName?' (vos)':''}</span>
@@ -613,8 +809,18 @@ function renderEvents() {
   ).join('');
 }
 
-// Init
-loadEvents();
+// Init — load events then restore session if player was active
+async function init() {
+  await loadEvents();
+  if (window._restorePlayer) {
+    const name = window._restorePlayer;
+    // Pre-fill name input in case restore fails
+    const inp = document.getElementById('name-input');
+    if (inp) inp.value = name;
+    await activatePlayer(name);
+  }
+}
+init();
 
 // Default events fallback
 const DEFAULT_EVENTS = [
