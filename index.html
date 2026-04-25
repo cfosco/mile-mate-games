@@ -470,9 +470,13 @@ function listenToFirebase() {
   });
 }
 
+function activeHappenedSet() {
+  return new Set(happenedEvents.filter(e => !e.correctedBy).map(e => e.evento));
+}
+
 function syncCardWithHappened() {
   if (!myCard.length || !happenedEvents.length) return;
-  const happened = new Set(happenedEvents.map(e => e.evento));
+  const happened = activeHappenedSet();
   let changed = false;
   myCard.forEach((cell, i) => {
     if (!cell.free && happened.has(cell.evento) && !markedCells[i]) {
@@ -485,7 +489,7 @@ function syncCardWithHappened() {
 
 function pushOfflineMarks() {
   if (!db || !playerName || !myCard.length) return;
-  const happened = new Set(happenedEvents.map(e => e.evento));
+  const happened = activeHappenedSet();
   Object.keys(markedCells).forEach(idx => {
     const cell = myCard[Number(idx)];
     if (cell && !cell.free && !happened.has(cell.evento)) {
@@ -897,7 +901,7 @@ function getPlaceholderEmoji(texto) {
 function buildImgHtml(cell) {
   const imgSrc = cell.imagen ? IMAGES_BASE_URL + cell.imagen : '';
   const emoji = getPlaceholderEmoji(cell.evento || '');
-  const placeholder = `<div class="modal-img-placeholder"><span>${emoji}</span><span class="placeholder-label">foto próximamente</span></div>`;
+  const placeholder = `<div class="modal-img-placeholder"><span>${emoji}</span></div>`;
   if (!imgSrc) return placeholder;
   return `<img src="${imgSrc}" class="modal-img" alt="${cell.evento}"
     onerror="this.outerHTML='${placeholder.replace(/'/g,'&#39;').replace(/"/g,'&quot;')}'">`;
@@ -945,15 +949,23 @@ function toggleCell(idx) {
   const cell = myCard[idx];
   if (markedCells[idx]) {
     delete markedCells[idx];
+    const activeEntry = happenedEvents.find(e => e.evento === cell.evento && !e.correctedBy);
+    if (activeEntry) {
+      const now = new Date();
+      const correctedTime = now.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
+      activeEntry.correctedBy = playerName;
+      activeEntry.correctedTime = correctedTime;
+      if (db) db.ref('happened/' + activeEntry.ts).update({correctedBy: playerName, correctedTime});
+    }
   } else {
     markedCells[idx] = true;
-    const existing = happenedEvents.find(e => e.evento === cell.evento);
-    if (!existing) {
+    const activeEntry = happenedEvents.find(e => e.evento === cell.evento && !e.correctedBy);
+    if (!activeEntry) {
       const now = new Date();
       const time = now.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
       const entry = {evento: cell.evento, player: playerName, time, ts: now.getTime()};
       happenedEvents.unshift(entry);
-      if (db) db.ref('happened/' + now.getTime()).set(entry);
+      if (db) db.ref('happened/' + entry.ts).set(entry);
     }
   }
   saveLocal();
@@ -1116,15 +1128,21 @@ function renderEvents() {
   const el = document.getElementById('ev-list');
   if (!happenedEvents.length) { el.innerHTML = '<div class="empty">Ningún evento marcado todavía.</div>'; return; }
   el.innerHTML = happenedEvents.map(e => {
+    const isCorrected = !!e.correctedBy;
     const photo = getCellPhoto(e.evento);
     const thumbHtml = photo
-      ? `<img src="${photo}" style="width:38px;height:38px;object-fit:cover;border-radius:6px;flex-shrink:0;border:0.5px solid var(--border)">`
-      : `<div style="width:38px;height:38px;border-radius:6px;background:var(--pink-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">${getPlaceholderEmoji(e.evento).split(/\s/)[0]||'🎉'}</div>`;
+      ? `<img src="${photo}" style="width:38px;height:38px;object-fit:cover;border-radius:6px;flex-shrink:0;border:0.5px solid var(--border);${isCorrected?'opacity:0.4':''}">`
+      : `<div style="width:38px;height:38px;border-radius:6px;background:var(--pink-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;${isCorrected?'opacity:0.4':''}">${getPlaceholderEmoji(e.evento).split(/\s/)[0]||'🎉'}</div>`;
+    const titleStyle = isCorrected ? 'text-decoration:line-through;color:var(--text-muted)' : '';
+    const correctedHtml = isCorrected
+      ? `<div class="ev-meta"><span style="font-style:italic;color:var(--text-muted)">Corregido por ${e.correctedBy} a las ${e.correctedTime}</span></div>`
+      : '';
     return `<div class="ev-row" style="display:flex;align-items:center;gap:12px;cursor:pointer" data-evento="${e.evento.replace(/"/g,'&quot;')}" onclick="openEventModal(this.dataset.evento)">
       ${thumbHtml}
       <div style="flex:1;min-width:0">
-        <div class="ev-title">${e.evento}</div>
-        <div class="ev-meta"><span class="ev-who">${e.player}</span><span class="ev-time">${e.time}</span></div>
+        <div class="ev-title" style="${titleStyle}">${e.evento}</div>
+        <div class="ev-meta"><span class="ev-who" style="${isCorrected?'color:var(--text-muted)':''}'">${e.player}</span><span class="ev-time">${e.time}</span></div>
+        ${correctedHtml}
       </div>
       <span style="color:var(--text-muted);font-size:16px">›</span>
     </div>`;
