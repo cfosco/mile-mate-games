@@ -329,7 +329,7 @@
         </div>
       </div>
       <div class="progress-bg"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-      <div id="bingo-banner" class="bingo-banner" style="display:none">¡BINGO! ¡Completaste una línea! ♥ — Avisale a Camilo (hermano de la novia)</div>
+      <div id="bingo-banner" class="bingo-banner" style="display:none">¡BINGO! ¡Completaste una línea! ♥</div>
       <div class="bingo-header">
         <div class="bingo-h-cell">B</div><div class="bingo-h-cell">I</div>
         <div class="bingo-h-cell">N</div><div class="bingo-h-cell">G</div><div class="bingo-h-cell">O</div>
@@ -955,8 +955,8 @@ function toggleCell(idx) {
   }
   saveLocal();
   saveToFirebase();
-  closeModal();
   renderCard();
+  openModal(idx);
 }
 
 function closeModal() {
