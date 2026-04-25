@@ -1,31 +1,54 @@
-evento,descripcion,imagen
-Un invitado se pone la corbata de vincha,Cuando la corbata deja de ser accesorio formal y se convierte en diadema improvisada.,corbata_vincha.jpg
-Mateo termina con la camisa afuera del pantalón,El momento exacto en que Mateo entra en modo fiesta total.,camisa_afuera.jpg
-Milena se cambia los zapatos por zapatillas o chatitas,Los tacos duran hasta la primera canción de pista.,zapatos_cambio.jpg
-Alguien intenta robar un centro de mesa antes de tiempo,Los centros de mesa tienen más seguridad que el novio.,centro_mesa.jpg
-Un niño se queda dormido sobre dos sillas,El sueño no distingue de horarios ni de celebraciones.,nino_dormido.jpg
-Se corta el trencito a mitad de la pista de baile,El trencito pierde fuerza y se descarrila en plena pista.,trencito.jpg
-Alguien tira vino tinto sobre un mantel blanco,Una mancha que va a quedar en la memoria (y en el mantel).,vino_mantel.jpg
-La tía le pregunta a un soltero ¿Y vos para cuándo?,La pregunta más temida de toda reunión familiar argentina.,tia_pregunta.jpg
-Invitado intentando convencer al DJ de poner un tema,Negociaciones diplomáticas con el controlador de la música.,dj_negocio.jpg
-Alguien se guarda comida en una servilleta para después,La técnica del tupper portátil de emergencia.,comida_servilleta.jpg
-Duelo de baile entre dos personas que no se conocían,La pista de baile como gran igualador social.,duelo_baile.jpg
-Mateo es revoleado por el aire por sus amigos,El vuelo nupcial masculino de rigor.,mateo_aire.jpg
-Alguien llora desconsoladamente durante el brindis,Las lágrimas de alegría (o nostalgia) se desbordan en el brindis.,llanto_brindis.jpg
-Se arma un pogo con una canción de rock nacional,Cuando el rock argentino toma el control de la fiesta.,pogo_rock.jpg
-Invitado grabando toda la fiesta con el flash prendido,El fotoperiodista no oficial con batería eterna y flash molesto.,flash_prendido.jpg
-Nadie agarra el ramo y cae al piso,El ramo hace su recorrido solo hasta el piso.,ramo_piso.jpg
-Alguien confunde a un invitado con un mozo,El look formal puede traer consecuencias inesperadas.,confunde_mozo.jpg
-Se termina el hielo en la barra,La tragedia silenciosa que marca el declive de los tragos.,sin_hielo.jpg
-Aparece un par de tacos abandonados bajo una mesa,Los zapatos encuentran su libertad debajo de una mesa.,tacos_mesa.jpg
-Alguien hace air guitar con un palo de cotillón,El cotillón se convierte en instrumento musical imaginario.,air_guitar.jpg
-Selfie grupal donde alguien queda afuera de la foto,La selfie que no fue para todos.,selfie_grupal.jpg
-La abuela le da un consejo matrimonial a Mateo en público,Sabiduría conyugal transmitida con micrófono abierto.,abuela_consejo.jpg
-Dos invitadas aparecen vestidas con el mismo color,La coincidencia cromática que nadie planeó.,mismo_color.jpg
-Alguien intenta hacer un truco de magia con los cubiertos,Ilusionismo espontáneo con los elementos de la mesa.,magia_cubiertos.jpg
-Invitado que se sirve tres postres distintos al mismo tiempo,La estrategia del postre múltiple: probar todo a la vez.,tres_postres.jpg
-Alex intenta un paso de baile acrobático y falla,El intento épico que termina en caída con estilo.,alex_acrobatico.jpg
-Sole se queda sin batería en el celular de tanto sacar fotos,El sacrificio de la fotógrafa no oficial de la noche.,sole_bateria.jpg
-Mamá se abraza llorando con una amiga de la infancia,El reencuentro emotivo que derrite hasta al más duro.,mama_abrazo.jpg
-Alguien pide un aplauso para el asador o el catering,El reconocimiento popular al equipo gastronómico.,aplauso_asador.jpg
-Un invitado se olvida el nombre de alguno de los novios,El momento incómodo de máximo olvido nupcial.,olvida_nombre.jpg
+evento,descripcion
+Un invitado se pone la corbata de vincha,Cuando la corbata deja de ser accesorio formal y se convierte en diadema improvisada.
+Milena se cae al piso,Oops.
+Mateo se cae al piso,Oops.
+Diana baila flamenco,Olé!!!
+Lilia le cuenta un cuento a Alex,Es tiempo de escuchar a la bisabuela.
+Alguna abuela se va muy temprano (antes de las 9),Son resilientes... pero necessitan su reposo.
+Algun invitado se cae al piso,Espero que esté bien!
+Se rompe una decoracion,Crash.
+Alguno baila sobre una mesa,Equilibrio?
+Mateo termina con la camisa afuera del pantalón,El momento exacto en que Mateo entra en modo fiesta total.
+Se termina la cerveza,Estamos en problemas...
+Caen algunas gotas de lluvia,Nada que pueda con este tremendo festejo.
+Milena llora en la ceremonia,Emociones a flor de piel.
+Mateo llora en la ceremonia,Emociones a flor de piel.
+Marcelo se confunde algun nombre al guiar la ceremonia,Que nervios...
+Milena se cambia los zapatos por zapatillas o chatitas,Los tacos duran hasta la primera canción de pista.
+Alguien intenta robar un centro de mesa o decoracion,Los centros de mesa tienen más seguridad que el novio.
+Un niño se queda dormido sobre dos sillas,El sueño no distingue de horarios ni de celebraciones.
+Se corta el trencito a mitad de la pista de baile,El trencito pierde fuerza y se descarrila en plena pista.
+Alguien tira vino tinto sobre una mesa,Una mancha que va a quedar en la memoria (y en el mantel).
+Se rompe un vaso,Destruccion controlada?
+Se rompe un plato,Plato en piezas y hay foto.
+Invitado intentando convencer al DJ de poner un tema,Negociaciones diplomáticas con el controlador de la música.
+Alguien se guarda comida en una servilleta para después,La técnica del tupper portátil de emergencia.
+Duelo de baile entre dos personas que no se conocían,La pista de baile como gran igualador social.
+Mateo es revoleado por el aire por sus amigos,El vuelo nupcial masculino de rigor.
+Alguien llora desconsoladamente durante el brindis,Las lágrimas de alegría (o nostalgia) se desbordan en el brindis.
+Se arma un pogo con una canción de rock nacional,Cuando el rock argentino toma el control de la fiesta.
+Nadie agarra el ramo y cae al piso,El ramo hace su recorrido solo hasta el piso.
+Brindis impromptu de alguien cercano a los novios,Tengo unas palabras...
+Alguien hace air guitar sobre una mesa,Es momento de ser rockstar.
+Dos invitadas aparecen vestidas con el mismo color y vestidos parecidos,La coincidencia cromática que nadie planeó.
+Alguien intenta hacer un truco de magia,Ilusionismo espontáneo con los elementos de la mesa.
+Invitado se sirve cinco postres distintos al mismo tiempo,La estrategia del postre múltiple: probar todo a la vez.
+Alex levantado en el aire al estilo Rey leon,Aaaaaaaa Cigueñaaaaaaaaaa
+Marina se queda sin batería en el celular de tanto sacar fotos,El sacrificio de la fotógrafa no oficial de la noche.
+Algun Marmora se abraza llorando con una amiga de la infancia,El reencuentro emotivo que derrite hasta al más duro.
+Alguien pide un aplauso para el asador o el catering,El reconocimiento popular al equipo gastronómico.
+Un invitado se olvida el nombre de alguno de los novios,El momento incómodo de máximo olvido nupcial.
+Marina baila con los dedos levantados,Tipico baile de madre.
+Padre y tio del novio hacen un bailecito juntos,Hermanos a la pista
+Suena la gaita en algun momento de la fiesta,Raices escocesas?
+Suenan temas de los 80' y las madres de los novios disfrutan,Se vienen tremendas mooves.
+Invitado termina tambaleandose de lo borracho,Cuidado con las puertas.
+Arrancan 2 trencitos en menos de 10 minutos,La locomotora del sabor.
+Hay vestidos de mas de 10 colores distintos,Publicidad de benetton.
+Algun invitado pierde la corbata,"Si la pierde por mas de 15 minutos, ya cuenta."
+Algun invitado pierde el cinturon,"Si lo pierde por mas de 15 minutos, ya cuenta."
+Milena termina muy borracha,Era de esperarse.
+Mateo termina muy borracho,Era de esperarse.
+"Suena ""Muchachos""",Vamos por la cuarta.
+Alex se duerme antes de irse,Bebuchi precioso.
+Alguien se para de manos,Tenia que haber algo de circo.
